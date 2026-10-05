@@ -1,4 +1,4 @@
-
+from config_loader import config_load
 import random
 
 
@@ -109,26 +109,6 @@ class MazeGenerator:
             else:
                 stack.pop()
 
-
-
-maze = MazeGenerator(4, 3, 42)
-
-print("\nHEX:")
-
-maze.generate()
-for row in maze.grid:
-    for cell in row:
-        print(format(cell, "X"), end="")
-    print()
-
-
-
-print(99//2)
-
-
-
-
-
 # print("ANTES:")
 # for row in maze.grid:
 #     print(row)
@@ -138,16 +118,6 @@ print(99//2)
 # print("\nDESPUÉS:")
 # for row in maze.grid:
 #     print(row)
-
-
-
-
-
-
-
-
-
-
 
 # print(maze.grid)
 # print(maze.grid[2][2])
