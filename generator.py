@@ -15,16 +15,46 @@ class MazeGenerator:
         self,
         width: int,
         height: int,
+        entry: tuple[int, int],
+        exit: tuple[int, int],
         seed: int | None = None
     ) -> None:
         self.width = width
         self.height = height
+        self.entry = entry
+        self.exit = exit
         self.random = random.Random(seed)
-
+        self.blocked: set[tuple[int, int]] = set()
         self.grid = [
             [ALL_WALLS for _ in range(width)]
             for _ in range(height)
         ]
+
+    def _place_42_pattern(self) -> None:
+        if self.width < 9 or self.height < 7:
+            print("Maze too small to display the 42 pattern")
+            return
+
+        center_x = self.width // 2
+        center_y = self.height // 2
+
+        pattern = [
+            (-3, -2), (-3, -1), (-3, 0),
+            (-2, 0),
+            (-1, 0), (-1, 1), (-1, 2),
+
+            (1, -2), (2, -2), (3, -2),
+            (3, -1),
+            (1, 0), (2, 0), (3, 0),
+            (1, 1),
+            (1, 2), (2, 2), (3, 2),
+        ]
+
+        for dx, dy in pattern:
+            x = center_x + dx
+            y = center_y + dy
+
+            self.blocked.add((x, y))
 
     def remove_wall(
         self,
@@ -80,11 +110,28 @@ class MazeGenerator:
 
         return neighbors
 
-    def generate(self) -> None:
-        visited = set()
-        stack = []
+    def _open_border(self, position: tuple[int, int]) -> None:
+        x, y = position
 
-        start = (0, 0)
+        if x == 0:
+            self.grid[y][x] &= ~WEST
+        elif x == self.width - 1:
+            self.grid[y][x] &= ~EAST
+        elif y == 0:
+            self.grid[y][x] &= ~NORTH
+        elif y == self.height - 1:
+            self.grid[y][x] &= ~SOUTH
+
+    def generate(self) -> None:
+        self._place_42_pattern()
+
+        self._open_border(self.entry)
+        self._open_border(self.exit)
+
+        visited: set[tuple[int, int]] = set()
+        stack: list[tuple[int, int]] = []
+
+        start = self.entry
 
         visited.add(start)
         stack.append(start)
@@ -96,7 +143,10 @@ class MazeGenerator:
             unvisited = []
 
             for nx, ny in neighbors:
-                if (nx, ny) not in visited:
+                if (
+                    (nx, ny) not in visited
+                    and (nx, ny) not in self.blocked
+                ):
                     unvisited.append((nx, ny))
 
             if unvisited:
@@ -110,8 +160,7 @@ class MazeGenerator:
                 stack.pop()
 
 
-
-maze = MazeGenerator(4, 3, 42)
+maze = MazeGenerator(9, 7, 42)
 
 print("\nHEX:")
 
@@ -120,14 +169,6 @@ for row in maze.grid:
     for cell in row:
         print(format(cell, "X"), end="")
     print()
-
-
-
-print(99//2)
-
-"ESTO ES UNA PRUEBA"
-"PATATTAAAAAAA"
-
 
 
 # print("ANTES:")
