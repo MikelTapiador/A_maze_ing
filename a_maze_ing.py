@@ -1,11 +1,24 @@
 from pydantic import ValidationError
 from config_loader import config_load
+from generator import MazeGenerator
+from renderer import Renderer
 
 
 def main() -> None:
     try:
         config = config_load()
         print(config)
+        maze = MazeGenerator(4, 3, 42)
+        maze.generate()
+        print("\nHEX:")
+
+        for row in maze.grid:
+            for cell in row:
+                print(format(cell, "X"), end="")
+            print()
+
+        renderer = Renderer(maze)
+        renderer.draw()
 
     except ValidationError as e:
         for error in e.errors():
