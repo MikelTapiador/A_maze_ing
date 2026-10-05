@@ -8,7 +8,7 @@ def main() -> None:
     try:
         config = config_load()
         print(config)
-        maze = MazeGenerator(4, 3, 42)
+        maze = MazeGenerator(10, 10, (0, 0), (1, 1), 42)
         maze.generate()
         print("\nHEX:")
 
