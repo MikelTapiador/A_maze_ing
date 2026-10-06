@@ -58,6 +58,12 @@ class MazeGenerator:
 
             self.blocked.add((x, y))
 
+    def _confirm_entry_exit(self) -> None:
+        if self.entry in self.blocked:
+            raise ValueError(f"The entry {self.entry} is not valid")
+        if self.exit in self.blocked:
+            raise ValueError(f"The exit {self.exit} is not valid")
+
     def remove_wall(
         self,
         x1: int,
@@ -158,7 +164,7 @@ class MazeGenerator:
         if candidates:
             nx, ny = self.random.choice(candidates)
             self.remove_wall(x, y, nx, ny)
-        
+
     def _make_playable(self) -> None:
         dead_ends = self._find_dead_ends()
 
@@ -168,11 +174,12 @@ class MazeGenerator:
 
     def generate(self) -> None:
         self._place_42_pattern()
+        self._confirm_entry_exit()
 
         visited: set[tuple[int, int]] = set()
         stack: list[tuple[int, int]] = []
 
-        start = self.entry
+        start = (0, 0)
 
         visited.add(start)
         stack.append(start)
@@ -199,29 +206,101 @@ class MazeGenerator:
 
             else:
                 stack.pop()
-  
+
         if not self.perfect:
             self._make_playable()
 
+    def _get_accessible_neighbors(
+        self, x: int, y: int
+    ) -> list[tuple[int, int]]:
+        neighbors = []
+
+        if (
+            self.is_inside(x, y - 1)
+            and not (self.grid[y][x] & NORTH)
+        ):
+            neighbors.append((x, y - 1))
+
+        if (
+            self.is_inside(x + 1, y)
+            and not (self.grid[y][x] & EAST)
+        ):
+            neighbors.append((x + 1, y))
+
+        if (
+            self.is_inside(x - 1, y)
+            and not (self.grid[y][x] & WEST)
+        ):
+            neighbors.append((x - 1, y))
+
+        if (
+            self.is_inside(x, y + 1)
+            and not (self.grid[y][x] & SOUTH)
+        ):
+            neighbors.append((x, y + 1))
+
+        return neighbors
+
+    def solve(self) -> list[tuple[int, int]]:
+        queue = [self.entry]
+        index = 0
+        visited = {self.entry}
+        parents: dict[tuple[int, int], tuple[int, int]] = {}
+
+        while index < len(queue):
+            x, y = queue[index]
+            index += 1
+
+            if (x, y) == self.exit:
+                break
+
+            for nx, ny in self._get_accessible_neighbors(x, y):
+                if (nx, ny) not in visited:
+                    visited.add((nx, ny))
+                    parents[(nx, ny)] = (x, y)
+                    queue.append((nx, ny))
+
+        if self.exit not in visited:
+            raise ValueError("No path found between entry and exit")
+
+        path = [self.exit]
+        current = self.exit
+
+        while current != self.entry:
+            current = parents[current]
+            path.append(current)
+
+        path.reverse()
+        return path
 
 
 
 
 
 
-
-maze = MazeGenerator(12,9,(0,0), (8,9), False)
+maze = MazeGenerator(12,9,(0,0), (8,8), False)
 
 
 print("ANTES:")
 for row in maze.grid:
-    print(row)
+    for cell in row:
+        print(f"{cell:X}", end="")
+    print()
 
 maze.generate()
+path = maze.solve()
 
 print("\nDESPUÉS:")
 for row in maze.grid:
-    print(row)
+    for cell in row:
+        print(f"{cell:X}", end="")
+    print()
+
+print("Entrada:", maze.entry)
+print("Salida:", maze.exit)
+print("Camino:", path)
+print("Número de movimientos:", len(path) - 1)
+
 
 # print(maze.grid)
 # print(maze.grid[2][2])
