@@ -1,4 +1,4 @@
-from config_loader import config_load
+
 import random
 
 
@@ -17,12 +17,14 @@ class MazeGenerator:
         height: int,
         entry: tuple[int, int],
         exit: tuple[int, int],
+        perfect: bool,
         seed: int | None = None
     ) -> None:
         self.width = width
         self.height = height
         self.entry = entry
         self.exit = exit
+        self.perfect = perfect
         self.random = random.Random(seed)
         self.blocked: set[tuple[int, int]] = set()
         self.grid = [
@@ -110,23 +112,62 @@ class MazeGenerator:
 
         return neighbors
 
-    def _open_border(self, position: tuple[int, int]) -> None:
-        x, y = position
+    def _count_openings(self, x: int, y: int) -> int:
+        openings = 0
 
-        if x == 0:
-            self.grid[y][x] &= ~WEST
-        elif x == self.width - 1:
-            self.grid[y][x] &= ~EAST
-        elif y == 0:
-            self.grid[y][x] &= ~NORTH
-        elif y == self.height - 1:
-            self.grid[y][x] &= ~SOUTH
+        if not self.grid[y][x] & NORTH:
+            openings += 1
+        if not self.grid[y][x] & EAST:
+            openings += 1
+        if not self.grid[y][x] & SOUTH:
+            openings += 1
+        if not self.grid[y][x] & WEST:
+            openings += 1
+
+        return openings
+
+    def _find_dead_ends(self) -> list[tuple[int, int]]:
+        dead_ends = []
+
+        for y in range(self.height):
+            for x in range(self.width):
+                if (x, y) in self.blocked:
+                    continue
+
+                if self._count_openings(x, y) == 1:
+                    dead_ends.append((x, y))
+
+        return dead_ends
+
+    def _open_dead_end(self, x: int, y: int) -> None:
+        candidates = []
+
+        for nx, ny in self.get_neighbors(x, y):
+            if (nx, ny) in self.blocked:
+                continue
+
+            if nx == x + 1 and self.grid[y][x] & EAST:
+                candidates.append((nx, ny))
+            elif nx == x - 1 and self.grid[y][x] & WEST:
+                candidates.append((nx, ny))
+            elif ny == y + 1 and self.grid[y][x] & SOUTH:
+                candidates.append((nx, ny))
+            elif ny == y - 1 and self.grid[y][x] & NORTH:
+                candidates.append((nx, ny))
+
+        if candidates:
+            nx, ny = self.random.choice(candidates)
+            self.remove_wall(x, y, nx, ny)
+        
+    def _make_playable(self) -> None:
+        dead_ends = self._find_dead_ends()
+
+        for x, y in dead_ends:
+            if self._count_openings(x, y) == 1:
+                self._open_dead_end(x, y)
 
     def generate(self) -> None:
         self._place_42_pattern()
-
-        self._open_border(self.entry)
-        self._open_border(self.exit)
 
         visited: set[tuple[int, int]] = set()
         stack: list[tuple[int, int]] = []
@@ -158,16 +199,29 @@ class MazeGenerator:
 
             else:
                 stack.pop()
+  
+        if not self.perfect:
+            self._make_playable()
 
-# print("ANTES:")
-# for row in maze.grid:
-#     print(row)
 
-# maze.generate()
 
-# print("\nDESPUÉS:")
-# for row in maze.grid:
-#     print(row)
+
+
+
+
+
+maze = MazeGenerator(12,9,(0,0), (8,9), False)
+
+
+print("ANTES:")
+for row in maze.grid:
+    print(row)
+
+maze.generate()
+
+print("\nDESPUÉS:")
+for row in maze.grid:
+    print(row)
 
 # print(maze.grid)
 # print(maze.grid[2][2])
