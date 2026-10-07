@@ -1,6 +1,6 @@
 
 import random
-
+from config_loader import Config
 
 NORTH = 1
 EAST = 2
@@ -13,23 +13,18 @@ ALL_WALLS = NORTH | EAST | SOUTH | WEST
 class MazeGenerator:
     def __init__(
         self,
-        width: int,
-        height: int,
-        entry: tuple[int, int],
-        exit: tuple[int, int],
-        perfect: bool,
-        seed: int | None = None
+        config: Config,
     ) -> None:
-        self.width = width
-        self.height = height
-        self.entry = entry
-        self.exit = exit
-        self.perfect = perfect
-        self.random = random.Random(seed)
+        self.width = config.width
+        self.height = config.height
+        self.entry = config.entry
+        self.exit = config.exit
+        self.perfect = config.perfect
+        self.random = random.Random(config.seed)
         self.blocked: set[tuple[int, int]] = set()
         self.grid = [
-            [ALL_WALLS for _ in range(width)]
-            for _ in range(height)
+            [ALL_WALLS for _ in range(config.width)]
+            for _ in range(config.height)
         ]
 
     def _place_42_pattern(self) -> None:
@@ -274,32 +269,28 @@ class MazeGenerator:
         return path
 
 
+# maze = MazeGenerator(12,9,(0,0), (8,8), False)
 
 
+# print("ANTES:")
+# for row in maze.grid:
+#     for cell in row:
+#         print(f"{cell:X}", end="")
+#     print()
 
+# maze.generate()
+# path = maze.solve()
 
-maze = MazeGenerator(12,9,(0,0), (8,8), False)
+# print("\nDESPUÉS:")
+# for row in maze.grid:
+#     for cell in row:
+#         print(f"{cell:X}", end="")
+#     print()
 
-
-print("ANTES:")
-for row in maze.grid:
-    for cell in row:
-        print(f"{cell:X}", end="")
-    print()
-
-maze.generate()
-path = maze.solve()
-
-print("\nDESPUÉS:")
-for row in maze.grid:
-    for cell in row:
-        print(f"{cell:X}", end="")
-    print()
-
-print("Entrada:", maze.entry)
-print("Salida:", maze.exit)
-print("Camino:", path)
-print("Número de movimientos:", len(path) - 1)
+# print("Entrada:", maze.entry)
+# print("Salida:", maze.exit)
+# print("Camino:", path)
+# print("Número de movimientos:", len(path) - 1)
 
 
 # print(maze.grid)
