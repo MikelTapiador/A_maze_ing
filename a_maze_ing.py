@@ -7,8 +7,7 @@ from renderer import Renderer
 def main() -> None:
     try:
         config = config_load()
-        print(config)
-        maze = MazeGenerator(10, 10, (0, 0), (1, 1), 42)
+        maze = MazeGenerator(config)
         maze.generate()
         print("\nHEX:")
 
