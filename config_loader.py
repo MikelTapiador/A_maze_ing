@@ -103,7 +103,7 @@ def config_load() -> Config:
     dict_config: dict[ConfigKey, str] = {}
     for line in content.splitlines():
         line = line.strip()
-        if not line:
+        if not line or line.startswith("#"):
             continue
         if "=" not in line:
             raise ValueError(
