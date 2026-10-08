@@ -16,15 +16,22 @@ def main() -> None:
                 print(format(cell, "X"), end="")
             print()
 
-        renderer = Renderer(maze)
+        solution_path = maze.solve()
+        print(solution_path)
+        renderer = Renderer(maze, solution_path)
         renderer.draw()
 
     except ValidationError as e:
         for error in e.errors():
-            field = str(error["loc"][0])
+            loc = error["loc"]
+            if loc:
+                field = str(loc[0])
+            else:
+                field = "maze"
             message = error["msg"].replace("Value error, ", "")
             print(f"Error in '{field.upper()}': {message}")
         return
+
     except ValueError as e:
         print(e)
         return
