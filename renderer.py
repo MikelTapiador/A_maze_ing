@@ -134,8 +134,6 @@ class Renderer:
                 # print(neighbors)
                 drawing = self._get_drawing(cell)
                 self._render_cell(row_index, col_index, drawing, draw_grid)
-                print()
-            print()
 
         # Imprimir laberinto
         # for row in draw_grid:
