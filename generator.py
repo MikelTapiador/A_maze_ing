@@ -22,6 +22,7 @@ class MazeGenerator:
         self.perfect = config.perfect
         self.random = random.Random(config.seed)
         self.blocked: set[tuple[int, int]] = set()
+        self.output_file = config.output_file
         self.grid = [
             [ALL_WALLS for _ in range(config.width)]
             for _ in range(config.height)
@@ -275,6 +276,37 @@ class MazeGenerator:
         path.reverse()
         return path
 
+    def path_to_directions(self, path: list[tuple[int, int]]) -> str:
+        directions = ""
+
+        for i in range(len(path) - 1):
+            x1, y1 = path[i]
+            x2, y2 = path[i + 1]
+
+            if x2 == x1 + 1:
+                directions += "E"
+            elif x2 == x1 - 1:
+                directions += "W"
+            elif y2 == y1 + 1:
+                directions += "S"
+            elif y2 == y1 - 1:
+                directions += "N"
+
+        return directions
+
+    def write_output(self) -> None:
+        path = self.solve()
+        directions = self.path_to_directions(path)
+
+        with open(self.output_file, "w") as file:
+            for row in self.grid:
+                file.write("".join(f"{cell:X}" for cell in row) + "\n")
+
+            file.write("\n")
+            file.write(f"{self.entry[0]},{self.entry[1]}\n")
+            file.write(f"{self.exit[0]},{self.exit[1]}\n")
+            file.write(directions + "\n")
+
 
 config = config_load()
 maze = MazeGenerator(config)
@@ -298,9 +330,8 @@ for row in maze.grid:
         print(f"{cell:X}", end="")
     print()
 
-
-path = maze.solve()
-print(path)
+maze.write_output()
+path = maze.solve
 
 # print("\nDESPUÉS:")
 # for row in maze.grid:
