@@ -54,8 +54,15 @@ class MazeGenerator:
             self.blocked.add((x, y))
 
     def _confirm_entry_exit(self) -> None:
+        if not self.is_inside(*self.entry):
+            raise ValueError(f"The entry {self.entry} is outside the maze")
+
+        if not self.is_inside(*self.exit):
+            raise ValueError(f"The exit {self.exit} is outside the maze")
+
         if self.entry in self.blocked:
             raise ValueError(f"The entry {self.entry} is not valid")
+
         if self.exit in self.blocked:
             raise ValueError(f"The exit {self.exit} is not valid")
 
@@ -240,17 +247,7 @@ class MazeGenerator:
         queue = [self.entry]
         index = 0
         visited = {self.entry}
-        parents: dict[tuple[intmaze = MazeGenerator(12,9,(0,0), (8,8), False)
-
-
-print("ANTES:")
-for row in maze.grid:
-    for cell in row:
-        print(f"{cell:X}", end="")
-    print()
-
-maze.generate()
-path = maze.solve(), int], tuple[int, int]] = {}
+        parents: dict[tuple[int, int], tuple[int, int]] = {}
 
         while index < len(queue):
             x, y = queue[index]
@@ -278,6 +275,7 @@ path = maze.solve(), int], tuple[int, int]] = {}
         path.reverse()
         return path
 
+
 config = config_load()
 maze = MazeGenerator(config)
 
@@ -289,6 +287,18 @@ for row in maze.grid:
     print()
 
 maze.generate()
+
+print("Entrada:", maze.entry)
+print("Salida:", maze.exit)
+print("Bloqueadas:", maze.blocked)
+
+print("Despues:")
+for row in maze.grid:
+    for cell in row:
+        print(f"{cell:X}", end="")
+    print()
+
+
 path = maze.solve()
 print(path)
 
