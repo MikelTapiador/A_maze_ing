@@ -1,6 +1,6 @@
 
 import random
-from config_loader import Config
+from config_loader import config_load, Config
 
 NORTH = 1
 EAST = 2
@@ -54,8 +54,15 @@ class MazeGenerator:
             self.blocked.add((x, y))
 
     def _confirm_entry_exit(self) -> None:
+        if not self.is_inside(*self.entry):
+            raise ValueError(f"The entry {self.entry} is outside the maze")
+
+        if not self.is_inside(*self.exit):
+            raise ValueError(f"The exit {self.exit} is outside the maze")
+
         if self.entry in self.blocked:
             raise ValueError(f"The entry {self.entry} is not valid")
+
         if self.exit in self.blocked:
             raise ValueError(f"The exit {self.exit} is not valid")
 
@@ -269,17 +276,31 @@ class MazeGenerator:
         return path
 
 
-# maze = MazeGenerator(12,9,(0,0), (8,8), False)
+config = config_load()
+maze = MazeGenerator(config)
 
 
-# print("ANTES:")
-# for row in maze.grid:
-#     for cell in row:
-#         print(f"{cell:X}", end="")
-#     print()
+print("ANTES:")
+for row in maze.grid:
+    for cell in row:
+        print(f"{cell:X}", end="")
+    print()
 
-# maze.generate()
-# path = maze.solve()
+maze.generate()
+
+print("Entrada:", maze.entry)
+print("Salida:", maze.exit)
+print("Bloqueadas:", maze.blocked)
+
+print("Despues:")
+for row in maze.grid:
+    for cell in row:
+        print(f"{cell:X}", end="")
+    print()
+
+
+path = maze.solve()
+print(path)
 
 # print("\nDESPUÉS:")
 # for row in maze.grid:
