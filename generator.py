@@ -1,6 +1,6 @@
 
 import random
-from config_loader import Config
+from config_loader import config_load, Config
 
 NORTH = 1
 EAST = 2
@@ -240,7 +240,17 @@ class MazeGenerator:
         queue = [self.entry]
         index = 0
         visited = {self.entry}
-        parents: dict[tuple[int, int], tuple[int, int]] = {}
+        parents: dict[tuple[intmaze = MazeGenerator(12,9,(0,0), (8,8), False)
+
+
+print("ANTES:")
+for row in maze.grid:
+    for cell in row:
+        print(f"{cell:X}", end="")
+    print()
+
+maze.generate()
+path = maze.solve(), int], tuple[int, int]] = {}
 
         while index < len(queue):
             x, y = queue[index]
@@ -268,18 +278,19 @@ class MazeGenerator:
         path.reverse()
         return path
 
+config = config_load()
+maze = MazeGenerator(config)
 
-# maze = MazeGenerator(12,9,(0,0), (8,8), False)
 
+print("ANTES:")
+for row in maze.grid:
+    for cell in row:
+        print(f"{cell:X}", end="")
+    print()
 
-# print("ANTES:")
-# for row in maze.grid:
-#     for cell in row:
-#         print(f"{cell:X}", end="")
-#     print()
-
-# maze.generate()
-# path = maze.solve()
+maze.generate()
+path = maze.solve()
+print(path)
 
 # print("\nDESPUÉS:")
 # for row in maze.grid:
