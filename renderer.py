@@ -107,16 +107,15 @@ class Renderer:
         path: set[tuple[int, int]],
         draw_grid: list[list[str]],
     ) -> None:
-        for row, col in path:
+        for col, row in path:
             top = row * 2
             left = col * 6
-            draw_grid[top + 1][left + 3] = "●"
-
-    # def draw_solution(self, path, draw_grid):
-    #     self._render_solution(path, self.draw_grid)
-
-    #     for row in self.draw_grid:
-    #         print("".join(row))
+            if (col, row) == self.entry:
+                draw_grid[top + 1][left + 3] = "S"
+            elif (col, row) == self.exit:
+                draw_grid[top + 1][left + 3] = "F"
+            else:
+                draw_grid[top + 1][left + 3] = "●"
 
     def draw(self) -> None:
         # Borrar pantalla
@@ -131,12 +130,9 @@ class Renderer:
 
         for row_index, row in enumerate(self.grid):
             for col_index, cell in enumerate(row):
-                # cell = self._get_real_walls(col, row_index, col_index)
                 # neighbors = self._get_neighbors(row_index, col_index)
-                # print(f"Cell [{row_index}, {col_index}] = {cell}")
                 # print(neighbors)
                 drawing = self._get_drawing(cell)
-                # print(drawing)
                 self._render_cell(row_index, col_index, drawing, draw_grid)
                 print()
             print()
@@ -149,24 +145,16 @@ class Renderer:
         self._render_solution(self.path_cells, draw_grid)
         for row in draw_grid:
             print("".join(row))
+        print()
 
         # self._render_solution(self.path_cells, draw_grid)
         # print(self.path_cells)
 
-    # def _get_real_walls(self,
-    #                     cell: int,
-    #                     row_index: int,
-    #                     col_index: int
-    #                     ) -> int:
-    #     if row_index == 0:
-    #         cell |= Walls.NORTH
-    #     if row_index == self.grid_height - 1:
-    #         cell |= Walls.SOUTH
-    #     if col_index == 0:
-    #         cell |= Walls.WEST
-    #     if col_index == self.grid_width - 1:
-    #         cell |= Walls.EAST
-    #     return cell
+    # def draw_solution(self, path, draw_grid):
+        #     self._render_solution(path, self.draw_grid)
+
+        #     for row in self.draw_grid:
+        #         print("".join(row))
 
     # def _get_neighbors(
     #     self,
