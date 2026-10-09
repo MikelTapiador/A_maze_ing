@@ -57,6 +57,7 @@ class Renderer:
         self.entry = maze.entry
         self.exit = maze.exit
         self.path = path
+        self.blocked = maze.blocked
 
     def _create_drawing(self) -> list[list[str]]:
         drawing: list[list[str]] = []
@@ -117,6 +118,27 @@ class Renderer:
             else:
                 draw_grid[top + 1][left + 3] = "●"
 
+    def _render_42(self, draw_grid: list[list[str]]) -> None:
+        for x, y in self.blocked:
+            top = y * 2
+            left = x * 6
+
+            for row in range(3):
+                for col in range(7):
+                    draw_grid[top + row][left + col] = (
+                        Ansi.PURPLE.value + "█" + Ansi.RESET.value
+                    )
+
+    # def _render_42(self, draw_grid: list[list[str]]) -> None:
+    #     for x, y in self.blocked:
+    #         top = y * 2
+    #         left = x * 6
+
+    #         for position in range(1,6):
+    #             draw_grid[top + 1][left + position] = (
+    #                 Ansi.PURPLE.value + "█" + Ansi.RESET.value
+    #             )
+
     def draw(self) -> None:
         # Borrar pantalla
         # print(Ansi.CLEAR.value, end="")
@@ -141,6 +163,7 @@ class Renderer:
         #     print()
 
         self._render_solution(self.path_cells, draw_grid)
+        self._render_42(draw_grid)
         for row in draw_grid:
             print("".join(row))
         print()
