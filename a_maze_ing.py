@@ -15,7 +15,7 @@ def draw_menu(config: Config) -> str:
         print()
         print("*** Maze too small to display the 42 pattern ***")
     print()
-    print("[R] Restart   [Q] Quit")
+    print("[R] Restart    [A] Animate   [F] Real Sociedad   [Q] Quit")
     print()
 
     option = input("Choose an option: ").strip().upper()
@@ -29,6 +29,8 @@ def clear_menu() -> None:
 
 def main() -> None:
     try:
+        animated = False
+        colour = False
         while True:
             config = config_load()
             maze = MazeGenerator(config)
@@ -37,7 +39,9 @@ def main() -> None:
             solution_path = maze.solve()
             maze.write_output()
             renderer = Renderer(maze, solution_path)
-            renderer.render()
+            renderer.render(animated, colour)
+            animated = False
+            colour = False
 
             while True:
                 option = draw_menu(config)
@@ -47,6 +51,14 @@ def main() -> None:
                     break
                 elif option == "Q":
                     return
+                elif option == "A":
+                    animated = True
+                    clear_menu()
+                    break
+                elif option == "F":
+                    colour = True
+                    clear_menu()
+                    break
                 else:
                     clear_menu()
                     print()
@@ -78,9 +90,6 @@ def main() -> None:
         print("\n\nProgram interrupted. Goodbye!")
         print()
         return
-
-    except BaseException as e:
-        print(e.__class__.__name__)
 
 
 if __name__ == "__main__":
