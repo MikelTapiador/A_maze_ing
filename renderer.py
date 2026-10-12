@@ -1,21 +1,42 @@
 from generator import MazeGenerator
 from enum import Enum
+from time import sleep
+import shutil
 
 
 class Ansi(str, Enum):
     ESC = '\033'
+
+    # Limpieza de terminal
     CLEAR = ESC + '[2J'
+    CLEAR_SCROLLBACK = ESC + '[3J'
+    ERASE_LINE = ESC + '[2K'
+    ERASE_DOWN = ESC + '[J'
+
+    # Cursor
+    HOME = ESC + '[H'
+    CURSOR_POSITION = ESC + '[{};{}H'
+    HIDE_CURSOR = ESC + "[?25l"
+    SHOW_CURSOR = ESC + "[?25h"
+
+    # Colores de texto
     RED = ESC + '[31m'
     YELLOW = ESC + '[33m'
     GREEN = ESC + '[32m'
     BLUE = ESC + '[34m'
     PURPLE = ESC + '[35m'
     WHITE_FG = ESC + '[37m'
+    BROWN = ESC + '[38;2;139;69;19m'
+
+    # Colores de fondo
     RED_BG = ESC + '[41m'
     YELLOW_BG = ESC + '[43m'
     GREEN_BG = ESC + '[42m'
     BLUE_BG = ESC + '[44m'
     PURPLE_BG = ESC + '[45m'
+    BROWN_BG = ESC + '[48;2;139;69;19m'
+
+    # Restaurar formato
     RESET = ESC + '[0m'
 
 
@@ -31,6 +52,10 @@ class Unicode(str, Enum):
     BOTTOM_LEFT = "└"
     BOTTOM = "┴"
     BOTTOM_RIGHT = "┘"
+    SINGLE_DOWN = "╵"
+    SINGLE_LEFT = "╶"
+    SINGLE_UP = "╷"
+    SINGLE_RIGHT = "╴"
     RABBIT = "\U0001F430"
     CARROT = "\U0001F955"
 
@@ -74,48 +99,6 @@ class Renderer:
             drawing.append(row)
         return drawing
 
-    # Función que obtiene el valor de las celdas vecinas
-    def _get_neighbors_cells(
-        self,
-        row_index: int,
-        col_index: int
-    ) -> dict[NeighborPos, int | None]:
-        neighbors: dict[NeighborPos, int | None] = {}
-        # NORTH
-        if row_index == 0:
-            neighbors[NeighborPos.NORTH] = None
-        else:
-            neighbor_row = row_index - 1
-            neighbor_col = col_index
-            neighbors[NeighborPos.NORTH] = (
-                self.grid[neighbor_row][neighbor_col]
-            )
-        # WEST
-        if col_index == 0:
-            neighbors[NeighborPos.WEST] = None
-        else:
-            neighbor_row = row_index
-            neighbor_col = col_index - 1
-            neighbors[NeighborPos.WEST] = self.grid[neighbor_row][neighbor_col]
-        # SOUTH
-        if row_index == self.grid_height - 1:
-            neighbors[NeighborPos.SOUTH] = None
-        else:
-            neighbor_row = row_index + 1
-            neighbor_col = col_index
-            neighbors[NeighborPos.SOUTH] = (
-                self.grid[neighbor_row][neighbor_col]
-            )
-        # EAST
-        if col_index == self.grid_width - 1:
-            neighbors[NeighborPos.EAST] = None
-        else:
-            neighbor_row = row_index
-            neighbor_col = col_index + 1
-            neighbors[NeighborPos.EAST] = self.grid[neighbor_row][neighbor_col]
-
-        return neighbors
-
     # Función que indica las paredes a dibujar de cada celda
     def _get_cell_walls(self,
                         cell: int
@@ -128,7 +111,7 @@ class Renderer:
         }
         return drawing
 
-    # Función que muestra cada celda
+    # Función que dibuja las paredes de la celda
     def _draw_cell_walls(self,
                          row_index: int,
                          col_index: int,
@@ -155,7 +138,61 @@ class Renderer:
         if drawing[NeighborPos.WEST]:
             draw_grid[top + 1][left] = Unicode.VERTICAL.value
 
-    # Función que muestra la ruta de la solución
+    # Función que dibuja las esquinas de la celda
+    def _draw_cell_corners(self, draw_grid: list[list[str]]) -> None:
+        corners = {
+            (False, False, False, False): " ",
+            (True, False, False, False): Unicode.SINGLE_DOWN.value,
+            (False, True, False, False): Unicode.SINGLE_LEFT.value,
+            (False, False, True, False): Unicode.SINGLE_UP.value,
+            (False, False, False, True): Unicode.SINGLE_RIGHT.value,
+            (True, False, True, False): Unicode.VERTICAL.value,
+            (False, True, False, True): Unicode.HORIZONTAL.value,
+            (False, True, True, False): Unicode.TOP_LEFT.value,
+            (False, False, True, True): Unicode.TOP_RIGHT.value,
+            (True, True, False, False): Unicode.BOTTOM_LEFT.value,
+            (True, False, False, True): Unicode.BOTTOM_RIGHT.value,
+            (False, True, True, True): Unicode.TOP.value,
+            (True, True, False, True): Unicode.BOTTOM.value,
+            (True, True, True, False): Unicode.LEFT.value,
+            (True, False, True, True): Unicode.RIGHT.value,
+            (True, True, True, True): Unicode.CROSS.value,
+        }
+
+        for row_index in range(0, len(draw_grid), self.CELL_HEIGHT):
+            for col_index in range(
+                0, len(draw_grid[row_index]), self.CELL_WIDTH
+            ):
+                if draw_grid[row_index][col_index] != "*":
+                    continue
+
+                up = (
+                    row_index > 0
+                    and draw_grid[row_index - 1][col_index]
+                    == Unicode.VERTICAL.value
+                )
+                right = (
+                    col_index + 1 < len(draw_grid[row_index])
+                    and draw_grid[row_index][col_index + 1]
+                    == Unicode.HORIZONTAL.value
+                )
+                down = (
+                    row_index + 1 < len(draw_grid)
+                    and draw_grid[row_index + 1][col_index]
+                    == Unicode.VERTICAL.value
+                )
+                left = (
+                    col_index > 0
+                    and draw_grid[row_index][col_index - 1]
+                    == Unicode.HORIZONTAL.value
+                )
+
+                connections = (up, right, down, left)
+
+                if connections in corners:
+                    draw_grid[row_index][col_index] = corners[connections]
+
+    # Función que dibuja la ruta de la solución
     def _draw_solution_path(
         self,
         path: list[tuple[int, int]],
@@ -187,7 +224,9 @@ class Renderer:
                 else:
                     direction = "N"
                 char = arrows[direction]
-                draw_grid[center[0]][center[1]] = char
+                draw_grid[center[0]][center[1]] = (
+                     Ansi.BROWN.value + char + Ansi.RESET.value
+                 )
 
     # Función que cambia de color el patrón 42
     def _draw_42_pattern(self, draw_grid: list[list[str]]) -> None:
@@ -197,7 +236,7 @@ class Renderer:
 
             for position in range(1, self.CELL_WIDTH):
                 draw_grid[top + 1][left + position] = (
-                    Ansi.RED.value + "█" + Ansi.RESET.value
+                    Ansi.BROWN.value + "█" + Ansi.RESET.value
                 )
 
     # Función que imprime la cuadrícula del laberinto
@@ -207,7 +246,7 @@ class Renderer:
 
             while col_index < len(row):
                 col = row[col_index]
-                color = Ansi.BLUE_BG.value + Ansi.WHITE_FG.value
+                color = Ansi.GREEN_BG.value + Ansi.WHITE_FG.value
 
                 print(
                     f"{color}{col}{Ansi.RESET.value}",
@@ -221,26 +260,83 @@ class Renderer:
 
             print()
 
+    # Función que comprueba que el tamaño del terminal sea suficiente
+    # para mostrar el laberinto
+    def _wait_for_terminal_size(self) -> None:
+        canvas_width = self.grid_width * self.CELL_WIDTH + 1
+        canvas_height = self.grid_height * self.CELL_HEIGHT + 1
+
+        while True:
+            terminal_size = shutil.get_terminal_size()
+
+            if (
+                terminal_size.columns >= canvas_width
+                and terminal_size.lines >= canvas_height
+            ):
+                break
+
+            print(
+                Ansi.HOME.value + Ansi.ERASE_DOWN.value,
+                end="",
+            )
+            print(
+                "Amplía la terminal para visualizar el laberinto.",
+                flush=True,
+            )
+            sleep(0.5)
+
     def render(self) -> None:
-        # Borrar pantalla
-        print(Ansi.CLEAR.value, end="")
+        # Comprobar que la terminal tiene espacio suficiente
+        self._wait_for_terminal_size()
 
-        # Crear laberinto
-        draw_grid = self._create_canvas()
+        # Borrar pantalla al comenzar
+        print(
+            Ansi.CLEAR.value
+            + Ansi.CLEAR_SCROLLBACK.value
+            + Ansi.HOME.value,
+            end="",
+        )
 
-        # Dibujar celdas
-        for row_index, row in enumerate(self.grid):
-            for col_index, cell in enumerate(row):
-                neighbors = self._get_neighbors_cells(row_index, col_index)
-                print(neighbors)
-                drawing = self._get_cell_walls(cell)
-                self._draw_cell_walls(row_index, col_index, drawing, draw_grid)
+        # Ocultar cursor
+        print(Ansi.HIDE_CURSOR.value, end="")
 
-        # Dibujar Ruta de la solución
-        self._draw_solution_path(self.path, draw_grid)
+        try:
+            # Crear laberinto
+            draw_grid = self._create_canvas()
 
-        # Dibujar el patrón 42
-        self._draw_42_pattern(draw_grid)
+            # Dibujar las celdas progresivamente
+            for row_index, row in enumerate(self.grid):
+                for col_index, cell in enumerate(row):
+                    drawing = self._get_cell_walls(cell)
 
-        # Imprimir laberinto
-        self._print_canvas(draw_grid)
+                    self._draw_cell_walls(
+                        row_index,
+                        col_index,
+                        drawing,
+                        draw_grid,
+                    )
+
+                    # Dibujar las equinas de las celdas
+                    self._draw_cell_corners(draw_grid)
+
+                    # Volver al inicio sin borrar la pantalla
+                    print(Ansi.HOME.value, end="")
+
+                    # Mostrar el estado actual del laberinto
+                    self._print_canvas(draw_grid)
+
+                    sleep(0.03)
+
+            # Dibujar solución
+            self._draw_solution_path(self.path, draw_grid)
+
+            # Dibujar patrón 42
+            self._draw_42_pattern(draw_grid)
+
+            # Mostrar resultado final del laberinto
+            print(Ansi.HOME.value, end="")
+            self._print_canvas(draw_grid)
+
+        finally:
+            # Recuperar el cursor incluso si ocurre un error
+            print(Ansi.SHOW_CURSOR.value, end="")
