@@ -14,7 +14,7 @@ def draw_menu(config: Config) -> str:
         print()
         print("*** Maze too small to display the 42 pattern ***")
     print()
-    print("[R] Restart    [A] Animate   [F] Real Sociedad   [Q] Quit")
+    print("[R] Restart    [A] Animate   [S] Solution   [F] Real Sociedad   [Q] Quit")
     print()
 
     option = input("Choose an option: ").strip().upper()
@@ -30,6 +30,7 @@ def main() -> None:
     try:
         animated = False
         colour = False
+        path = False
         while True:
             config = config_load()
             maze = MazeGenerator(config)
@@ -38,14 +39,15 @@ def main() -> None:
             solution_path = maze.solve()
             maze.write_output()
             renderer = Renderer(maze, solution_path)
-            renderer.render(animated, colour)
+            renderer.render(animated, colour, path)
             animated = False
-            colour = False
+            path = False
 
             while True:
                 option = draw_menu(config)
 
                 if option == "R":
+                    colour = False
                     clear_menu()
                     break
                 elif option == "Q":
@@ -56,6 +58,10 @@ def main() -> None:
                     break
                 elif option == "F":
                     colour = True
+                    clear_menu()
+                    break
+                elif option == "S":
+                    path = True
                     clear_menu()
                     break
                 else:

@@ -283,7 +283,7 @@ class Renderer:
             )
             sleep(0.1)
 
-    def render(self, animated: bool, colour: bool) -> None:
+    def render(self, animated: bool, colour: bool, path: bool) -> None:
         self._wait_for_terminal_size()
 
         print(
@@ -317,8 +317,8 @@ class Renderer:
                         self._print_canvas(draw_grid, colour)
 
                         sleep(0.001)
-
-            self._draw_solution_path(self.path, draw_grid)
+            if path:
+                self._draw_solution_path(self.path, draw_grid)
 
             self._draw_42_pattern(draw_grid, colour)
 
