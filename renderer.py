@@ -7,19 +7,16 @@ import shutil
 class Ansi(str, Enum):
     ESC = '\033'
 
-    # Limpieza de terminal
     CLEAR = ESC + '[2J'
     CLEAR_SCROLLBACK = ESC + '[3J'
     ERASE_LINE = ESC + '[2K'
     ERASE_DOWN = ESC + '[J'
 
-    # Cursor
     HOME = ESC + '[H'
     CURSOR_POSITION = ESC + '[{};{}H'
     HIDE_CURSOR = ESC + "[?25l"
     SHOW_CURSOR = ESC + "[?25h"
 
-    # Colores de texto
     RED = ESC + '[31m'
     YELLOW = ESC + '[33m'
     GREEN = ESC + '[32m'
@@ -28,7 +25,6 @@ class Ansi(str, Enum):
     WHITE_FG = ESC + '[37m'
     BROWN = ESC + '[38;2;139;69;19m'
 
-    # Colores de fondo
     RED_BG = ESC + '[41m'
     YELLOW_BG = ESC + '[43m'
     GREEN_BG = ESC + '[42m'
@@ -36,7 +32,6 @@ class Ansi(str, Enum):
     PURPLE_BG = ESC + '[45m'
     BROWN_BG = ESC + '[48;2;139;69;19m'
 
-    # Restaurar formato
     RESET = ESC + '[0m'
 
 
@@ -89,7 +84,6 @@ class Renderer:
         self.blocked = maze.blocked
         self.path = path
 
-    # Función que crea la cuadrícula del laberinto
     def _create_canvas(self) -> list[list[str]]:
         drawing: list[list[str]] = []
         for _ in range(self.grid_height * self.CELL_HEIGHT + 1):
@@ -99,7 +93,6 @@ class Renderer:
             drawing.append(row)
         return drawing
 
-    # Función que indica las paredes a dibujar de cada celda
     def _get_cell_walls(self,
                         cell: int
                         ) -> dict[NeighborPos, bool]:
@@ -111,7 +104,6 @@ class Renderer:
         }
         return drawing
 
-    # Función que dibuja las paredes de la celda
     def _draw_cell_walls(self,
                          row_index: int,
                          col_index: int,
@@ -138,7 +130,6 @@ class Renderer:
         if drawing[NeighborPos.WEST]:
             draw_grid[top + 1][left] = Unicode.VERTICAL.value
 
-    # Función que dibuja las esquinas de la celda
     def _draw_cell_corners(self, draw_grid: list[list[str]]) -> None:
         corners = {
             (False, False, False, False): " ",
@@ -192,7 +183,6 @@ class Renderer:
                 if connections in corners:
                     draw_grid[row_index][col_index] = corners[connections]
 
-    # Función que dibuja la ruta de la solución
     def _draw_solution_path(
         self,
         path: list[tuple[int, int]],
@@ -228,25 +218,35 @@ class Renderer:
                      Ansi.BROWN.value + char + Ansi.RESET.value
                  )
 
-    # Función que cambia de color el patrón 42
-    def _draw_42_pattern(self, draw_grid: list[list[str]]) -> None:
+    def _draw_42_pattern(
+                        self, draw_grid: list[list[str]], colour: bool
+                        ) -> None:
         for x, y in self.blocked:
             top = y * self.CELL_HEIGHT
             left = x * self.CELL_WIDTH
 
-            for position in range(1, self.CELL_WIDTH):
-                draw_grid[top + 1][left + position] = (
-                    Ansi.BROWN.value + "█" + Ansi.RESET.value
-                )
+            if not colour:
+                for position in range(1, self.CELL_WIDTH):
+                    draw_grid[top + 1][left + position] = (
+                        Ansi.BROWN.value + "█" + Ansi.RESET.value
+                    )
+            if colour:
+                for position in range(1, self.CELL_WIDTH):
+                    draw_grid[top + 1][left + position] = (
+                        Ansi.WHITE_FG.value + "█" + Ansi.RESET.value
+                    )
 
-    # Función que imprime la cuadrícula del laberinto
-    def _print_canvas(self, draw_grid: list[list[str]]) -> None:
+    def _print_canvas(self, draw_grid: list[list[str]], colour: bool) -> None:
+
         for row in draw_grid:
             col_index = 0
 
             while col_index < len(row):
                 col = row[col_index]
-                color = Ansi.GREEN_BG.value + Ansi.WHITE_FG.value
+                if not colour:
+                    color = Ansi.GREEN_BG.value + Ansi.WHITE_FG.value
+                if colour:
+                    color = Ansi.BLUE_BG.value + Ansi.WHITE_FG.value
 
                 print(
                     f"{color}{col}{Ansi.RESET.value}",
@@ -260,8 +260,6 @@ class Renderer:
 
             print()
 
-    # Función que comprueba que el tamaño del terminal sea suficiente
-    # para mostrar el laberinto
     def _wait_for_terminal_size(self) -> None:
         canvas_width = self.grid_width * self.CELL_WIDTH + 1
         canvas_height = self.grid_height * self.CELL_HEIGHT + 1
@@ -285,11 +283,9 @@ class Renderer:
             )
             sleep(0.5)
 
-    def render(self) -> None:
-        # Comprobar que la terminal tiene espacio suficiente
+    def render(self, animated: bool, colour: bool) -> None:
         self._wait_for_terminal_size()
 
-        # Borrar pantalla al comenzar
         print(
             Ansi.CLEAR.value
             + Ansi.CLEAR_SCROLLBACK.value
@@ -297,14 +293,11 @@ class Renderer:
             end="",
         )
 
-        # Ocultar cursor
         print(Ansi.HIDE_CURSOR.value, end="")
 
         try:
-            # Crear laberinto
             draw_grid = self._create_canvas()
 
-            # Dibujar las celdas progresivamente
             for row_index, row in enumerate(self.grid):
                 for col_index, cell in enumerate(row):
                     drawing = self._get_cell_walls(cell)
@@ -316,27 +309,21 @@ class Renderer:
                         draw_grid,
                     )
 
-                    # Dibujar las equinas de las celdas
                     self._draw_cell_corners(draw_grid)
 
-                    # Volver al inicio sin borrar la pantalla
-                    print(Ansi.HOME.value, end="")
+                    if animated:
+                        print(Ansi.HOME.value, end="")
 
-                    # Mostrar el estado actual del laberinto
-                    self._print_canvas(draw_grid)
+                        self._print_canvas(draw_grid, colour)
 
-                    sleep(0.03)
+                        sleep(0.03)
 
-            # Dibujar solución
             self._draw_solution_path(self.path, draw_grid)
 
-            # Dibujar patrón 42
-            self._draw_42_pattern(draw_grid)
+            self._draw_42_pattern(draw_grid, colour)
 
-            # Mostrar resultado final del laberinto
             print(Ansi.HOME.value, end="")
-            self._print_canvas(draw_grid)
+            self._print_canvas(draw_grid, colour)
 
         finally:
-            # Recuperar el cursor incluso si ocurre un error
             print(Ansi.SHOW_CURSOR.value, end="")
