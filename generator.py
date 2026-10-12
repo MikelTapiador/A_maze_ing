@@ -1,7 +1,6 @@
 
 import random
-from config_loader import Config
-# from config_loader import config_load
+from config_loader import Config, Algorithms
 
 NORTH = 1
 EAST = 2
@@ -28,10 +27,10 @@ class MazeGenerator:
             [ALL_WALLS for _ in range(config.width)]
             for _ in range(config.height)
         ]
+        self.algorithm = config.algorithm
 
     def _place_42_pattern(self) -> None:
         if self.width < 9 or self.height < 7:
-            print("Maze too small to display the 42 pattern")
             return
 
         center_x = self.width // 2
@@ -71,10 +70,10 @@ class MazeGenerator:
             raise ValueError(f"The exit {self.exit} is outside the maze")
 
         if self.entry in self.blocked:
-            raise ValueError(f"The entry {self.entry} is not valid")
+            raise ValueError(f"The entry {self.entry} is inside the 42 pattern")
 
         if self.exit in self.blocked:
-            raise ValueError(f"The exit {self.exit} is not valid")
+            raise ValueError(f"The exit {self.exit} is inside the 42 pattern")
 
     def remove_wall(
         self,
@@ -178,9 +177,7 @@ class MazeGenerator:
             if self._count_openings(x, y) == 1:
                 self._open_dead_end(x, y)
 
-    def generate(self) -> None:
-        self._place_42_pattern()
-        self._confirm_entry_exit()
+    def _generate_dfs(self) -> None:
 
         visited: set[tuple[int, int]] = set()
         stack: list[tuple[int, int]] = []
@@ -212,6 +209,39 @@ class MazeGenerator:
 
             else:
                 stack.pop()
+
+    def _generate_prim(self) -> None:
+        start = (0, 0)
+        visited = {start}
+        frontier = []
+
+        for x, y in self.get_neighbors(*start):
+            if (x, y) not in visited and (x, y) not in self.blocked:
+                frontier.append((start[0], start[1], x, y))
+
+        while frontier:
+            index = self.random.randrange(len(frontier))
+            x, y, nx, ny = frontier.pop(index)
+
+            if (nx, ny) not in visited:
+                self.remove_wall(x, y, nx, ny)
+                visited.add((nx, ny))
+
+                for next_x, next_y in self.get_neighbors(nx, ny):
+                    if (
+                        (next_x, next_y) not in visited
+                        and (next_x, next_y) not in self.blocked
+                    ):
+                        frontier.append((nx, ny, next_x, next_y))
+
+    def generate(self) -> None:
+        self._place_42_pattern()
+        self._confirm_entry_exit()
+
+        if self.algorithm == Algorithms.DFS:
+            self._generate_dfs()
+        elif self.algorithm == Algorithms.PRIM:
+            self._generate_prim()
 
         if not self.perfect:
             self._make_playable()
