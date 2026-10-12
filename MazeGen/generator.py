@@ -1,6 +1,6 @@
 
 import random
-from config_loader import Config, Algorithms
+from .config_loader import Config, Algorithms
 
 NORTH = 1
 EAST = 2
@@ -70,10 +70,10 @@ class MazeGenerator:
             raise ValueError(f"The exit {self.exit} is outside the maze")
 
         if self.entry in self.blocked:
-            raise ValueError(f"The entry {self.entry} is inside the 42 pattern")
+            raise ValueError(f"The entry {self.entry} is inside 42 pattern")
 
         if self.exit in self.blocked:
-            raise ValueError(f"The exit {self.exit} is inside the 42 pattern")
+            raise ValueError(f"The exit {self.exit} is inside 42 pattern")
 
     def remove_wall(
         self,

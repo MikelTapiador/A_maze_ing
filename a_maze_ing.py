@@ -1,6 +1,6 @@
 from pydantic import ValidationError
-from config_loader import config_load
-from generator import MazeGenerator
+from MazeGen.config_loader import config_load
+from MazeGen.generator import MazeGenerator
 from renderer import Renderer
 
 
@@ -16,8 +16,8 @@ def draw_menu() -> str:
 
 def main() -> None:
     try:
-        config = config_load()
         while True:
+            config = config_load()
             maze = MazeGenerator(config)
             maze.generate()
             print("\nHEX:")
