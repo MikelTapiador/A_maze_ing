@@ -5,7 +5,6 @@ from renderer import Renderer
 
 
 def draw_menu(config: Config) -> str:
-    # Guardar la posición del cursor
     print("\033[s", end="")
     print()
     print("-" * 32)

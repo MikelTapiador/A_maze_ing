@@ -278,7 +278,7 @@ class Renderer:
                 end="",
             )
             print(
-                "Amplía la terminal para visualizar el laberinto.",
+                "Expand the terminal to view the maze.",
                 flush=True,
             )
             sleep(0.5)
