@@ -14,7 +14,7 @@ def draw_menu(config: Config) -> str:
         print()
         print("*** Maze too small to display the 42 pattern ***")
     print()
-    print("[R] Restart    [A] Animate   [S] Solution   [F] Real Sociedad   [Q] Quit")
+    print("[R] Restart [A] Animate  [S] Solution [F] Real Sociedad  [Q] Quit")
     print()
 
     option = input("Choose an option: ").strip().upper()
