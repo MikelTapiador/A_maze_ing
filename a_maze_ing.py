@@ -84,7 +84,7 @@ def main() -> None:
         print()
         return
 
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, EOFError):
         print()
         print("\n\nProgram interrupted. Goodbye!")
         print()

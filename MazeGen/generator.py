@@ -242,6 +242,8 @@ class MazeGenerator:
             self._generate_dfs()
         elif self.algorithm == Algorithms.PRIM:
             self._generate_prim()
+        else:
+            self._generate_dfs()
 
         if not self.perfect:
             self._make_playable()

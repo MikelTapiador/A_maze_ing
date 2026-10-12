@@ -281,7 +281,7 @@ class Renderer:
                 "Expand the terminal to view the maze.",
                 flush=True,
             )
-            sleep(0.5)
+            sleep(0.1)
 
     def render(self, animated: bool, colour: bool) -> None:
         self._wait_for_terminal_size()
@@ -316,7 +316,7 @@ class Renderer:
 
                         self._print_canvas(draw_grid, colour)
 
-                        sleep(0.03)
+                        sleep(0.001)
 
             self._draw_solution_path(self.path, draw_grid)
 
