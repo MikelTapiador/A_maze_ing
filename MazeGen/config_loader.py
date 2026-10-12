@@ -54,6 +54,10 @@ class Config(BaseModel):
             raise ValueError("Exit is outside the maze")
         if self.entry == self.exit:
             raise ValueError("Entry and exit cannot be the same")
+        if (self.width > 25) or (self.height > 25):
+            raise ValueError("Maze width and height must not exceed 25")
+        if (self.width < 5) or (self.height < 5):
+            raise ValueError("Maze width and height must be at least 5")
         return self
 
 
