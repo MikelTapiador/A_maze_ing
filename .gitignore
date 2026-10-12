@@ -5,3 +5,6 @@ maze_analyzer.py
 .gitignore
 .__pycache__
 .mypy_cache
+dist
+mazegen_amazing.egg-info
+*.venv

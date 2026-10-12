@@ -1,4 +1,4 @@
-from generator import MazeGenerator
+from MazeGen.generator import MazeGenerator
 from enum import Enum
 from time import sleep
 import shutil
