@@ -16,7 +16,7 @@ class ConfigKey(str, Enum):
 
 
 class Algorithms(str, Enum):
-    DNF = "dnf"
+    DFS = "dfs"
     PRIM = "prim"
 
 
