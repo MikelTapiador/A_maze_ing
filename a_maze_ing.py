@@ -35,8 +35,6 @@ def main() -> None:
 
     config_file = sys.argv[1]
 
-    print(f"Configuration file: {config_file}")
-
     try:
         animated = False
         colour = False
