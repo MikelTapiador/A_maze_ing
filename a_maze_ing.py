@@ -2,6 +2,7 @@ from pydantic import ValidationError
 from MazeGen.config_loader import config_load, Config
 from MazeGen.generator import MazeGenerator
 from renderer import Renderer
+import sys
 
 
 def draw_menu(config: Config) -> str:
@@ -27,12 +28,21 @@ def clear_menu() -> None:
 
 
 def main() -> None:
+
+    if len(sys.argv) != 2:
+        print("Usage: python3 amazeing.py <config_file>")
+        return
+
+    config_file = sys.argv[1]
+
+    print(f"Configuration file: {config_file}")
+
     try:
         animated = False
         colour = False
         path = False
         while True:
-            config = config_load()
+            config = config_load(config_file)
             maze = MazeGenerator(config)
             maze.generate()
 
@@ -40,36 +50,47 @@ def main() -> None:
             maze.write_output()
             renderer = Renderer(maze, solution_path)
             renderer.render(animated, colour, path)
-            animated = False
-            path = False
 
             while True:
                 option = draw_menu(config)
 
                 if option == "R":
+                    animated = False
                     colour = False
+                    path = False
                     clear_menu()
                     break
+
                 elif option == "Q":
                     return
+
                 elif option == "A":
                     animated = True
-                    clear_menu()
-                    break
+
                 elif option == "F":
                     colour = True
-                    clear_menu()
-                    break
+
                 elif option == "S":
                     path = True
+
+                elif option == "":
                     clear_menu()
-                    break
+                    continue
+
                 else:
                     clear_menu()
                     print()
                     print("Invalid option.")
                     input("Press Enter to continue...")
                     clear_menu()
+                    continue
+
+                clear_menu()
+                renderer.render(animated, colour, path)
+                print(config.seed)
+
+                animated = False
+                path = False
 
     except ValidationError as e:
         for error in e.errors():
@@ -98,4 +119,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except OSError as e:
+        print(f"{e}")
