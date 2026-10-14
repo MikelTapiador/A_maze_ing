@@ -87,7 +87,6 @@ def main() -> None:
 
                 clear_menu()
                 renderer.render(animated, colour, path)
-                print(config.seed)
 
                 animated = False
                 path = False
