@@ -101,54 +101,58 @@ def parse_algorithm(value: str, field: ConfigKey) -> Algorithms:
         )
 
 
-def config_load() -> Config:
-    with open("config.txt") as file:
-        content = file.read()
+def config_load(file_name: str) -> Config:
+    try:
+        with open(file_name) as file:
+            content = file.read()
 
-    dict_config: dict[ConfigKey, str] = {}
-    for line in content.splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        if "=" not in line:
-            raise ValueError(
-                f"Invalid line: '{line}'. Expected 'KEY=VALUE'"
+        dict_config: dict[ConfigKey, str] = {}
+        for line in content.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if "=" not in line:
+                raise ValueError(
+                    f"Invalid line: '{line}'. Expected 'KEY=VALUE'"
+                )
+            key, value = line.strip().split("=", 1)
+            config_key = ConfigKey(key.lower().strip())
+            config_value = value.lower().strip()
+            dict_config[config_key] = config_value
+
+        required_keys = set(ConfigKey) - {ConfigKey.SEED, ConfigKey.ALGORITHM}
+        missing_keys = required_keys - dict_config.keys()
+        if missing_keys:
+            for key in missing_keys:
+                print(f"Error in '{key.value.upper()}': field is missing")
+            raise ValueError("Missing required configuration fields")
+
+        if ConfigKey.SEED in dict_config:
+            seed = parse_int(dict_config[ConfigKey.SEED], ConfigKey.SEED)
+        else:
+            seed = None
+        if ConfigKey.ALGORITHM in dict_config:
+            algorithm = parse_algorithm(
+                dict_config[ConfigKey.ALGORITHM],
+                ConfigKey.ALGORITHM
             )
-        key, value = line.strip().split("=", 1)
-        config_key = ConfigKey(key.lower().strip())
-        config_value = value.lower().strip()
-        dict_config[config_key] = config_value
+        else:
+            algorithm = None
 
-    required_keys = set(ConfigKey) - {ConfigKey.SEED, ConfigKey.ALGORITHM}
-    missing_keys = required_keys - dict_config.keys()
-    if missing_keys:
-        for key in missing_keys:
-            print(f"Error in '{key.value.upper()}': field is missing")
-        raise ValueError("Missing required configuration fields")
-
-    if ConfigKey.SEED in dict_config:
-        seed = parse_int(dict_config[ConfigKey.SEED], ConfigKey.SEED)
-    else:
-        seed = None
-    if ConfigKey.ALGORITHM in dict_config:
-        algorithm = parse_algorithm(
-            dict_config[ConfigKey.ALGORITHM],
-            ConfigKey.ALGORITHM
+        config_file = Config(
+            width=parse_int(dict_config[ConfigKey.WIDTH], ConfigKey.WIDTH),
+            height=parse_int(dict_config[ConfigKey.HEIGHT], ConfigKey.HEIGHT),
+            entry=parse_tuple(dict_config[ConfigKey.ENTRY], ConfigKey.ENTRY),
+            exit=parse_tuple(dict_config[ConfigKey.EXIT], ConfigKey.EXIT),
+            output_file=dict_config[ConfigKey.OUTPUT_FILE],
+            perfect=parse_bool(
+                dict_config[ConfigKey.PERFECT],
+                ConfigKey.PERFECT
+            ),
+            seed=seed,
+            algorithm=algorithm
         )
-    else:
-        algorithm = None
+        return config_file
 
-    config_file = Config(
-        width=parse_int(dict_config[ConfigKey.WIDTH], ConfigKey.WIDTH),
-        height=parse_int(dict_config[ConfigKey.HEIGHT], ConfigKey.HEIGHT),
-        entry=parse_tuple(dict_config[ConfigKey.ENTRY], ConfigKey.ENTRY),
-        exit=parse_tuple(dict_config[ConfigKey.EXIT], ConfigKey.EXIT),
-        output_file=dict_config[ConfigKey.OUTPUT_FILE],
-        perfect=parse_bool(
-            dict_config[ConfigKey.PERFECT],
-            ConfigKey.PERFECT
-        ),
-        seed=seed,
-        algorithm=algorithm
-    )
-    return config_file
+    except OSError as e:
+        raise OSError(f"Error accessing file '{file_name}': {e}") from e
